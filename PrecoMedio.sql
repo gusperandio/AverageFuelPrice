@@ -135,16 +135,16 @@
 
 		open cursor_remanescente 
 								
-		fetch next from cursor_remanescente	into @cur_IdAbastecimento,
-									 @cur_DtAbastecimento,					
-									 @cur_LocalAbastecimento, 
-									 @cur_LitrosAbastecidos,
-									 @cur_ValorLitros,
-									 @cur_ValorAbastecido,
-									 @cur_ConsumoTrecho,
-									 @cur_DataTrecho,	
-									 @cur_OrigemDestino,
-									 @cur_IdTrecho
+		fetch next from cursor_remanescente into @cur_IdAbastecimento,
+							 @cur_DtAbastecimento,					
+							 @cur_LocalAbastecimento, 
+							 @cur_LitrosAbastecidos,
+							 @cur_ValorLitros,
+							 @cur_ValorAbastecido,
+							 @cur_ConsumoTrecho,
+							 @cur_DataTrecho,	
+							 @cur_OrigemDestino,
+							 @cur_IdTrecho
 		
 		
 		--Variáveis iniciais
