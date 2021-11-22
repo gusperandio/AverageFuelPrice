@@ -17,80 +17,80 @@
 		
 		--Tabela princial
 		create table #principal	(IdReman int identity,
-								DtAbastecimento date,
-                MoedaAbastecimento int,
-								LitrosAbastecidos numeric (10,2),
-								ValorLitros numeric(10,4),
-								ValorAbastecido numeric(10,2),
-								RemanInicial numeric(10,2),
-								ValorRemanInicial numeric(10,2),
-								PrecoMedio numeric(10,4),
-								ConsumoTrecho numeric(10,2),
-								ConsumoValor numeric(10,2),
-								RemanFinal numeric(10,2),
-								ValorRemanFinal numeric(10,2),
-								DataTrecho date,
-								OrigemDestino varchar(20),
-								IdTrecho int)
+					DtAbastecimento date,
+                			MoedaAbastecimento int,
+					LitrosAbastecidos numeric (10,2),
+					ValorLitros numeric(10,4),
+					ValorAbastecido numeric(10,2),
+					RemanInicial numeric(10,2),
+					ValorRemanInicial numeric(10,2),
+					PrecoMedio numeric(10,4),
+					ConsumoTrecho numeric(10,2),
+					ConsumoValor numeric(10,2),
+					RemanFinal numeric(10,2),
+					ValorRemanFinal numeric(10,2),
+					DataTrecho date,
+					OrigemDestino varchar(20),
+					IdTrecho int)
 		
 		insert into #principal(DtAbastecimento,
-                MoedaAbastecimento,
-								LitrosAbastecidos,
-								ValorLitros,
-								ValorAbastecido,
-								RemanInicial,
-								ValorRemanInicial,
-								PrecoMedio,
-								ConsumoTrecho,
-								ConsumoValor ,
-								RemanFinal,
-								ValorRemanFinal,
-								DataTrecho,
-								OrigemDestino,
-								IdTrecho)
+                			MoedaAbastecimento,
+					LitrosAbastecidos,
+					ValorLitros,
+					ValorAbastecido,
+					RemanInicial,
+					ValorRemanInicial,
+					PrecoMedio,
+					ConsumoTrecho,
+					ConsumoValor ,
+					RemanFinal,
+					ValorRemanFinal,
+					DataTrecho,
+					OrigemDestino,
+					IdTrecho)
 									
 			SELECT top 1 
 				@dataInicial, 
-         1,
-			   @valorRemanIni,
-			   @valorMedio,
-			   round((@valorRemanIni * @valorMedio),2),
-			   @valorRemanIni,
-			   round((@valorRemanIni * @valorMedio),2),
-			   round(@valorMedio,4),
-			   T.LITROS_CONSUMIDOS,
-			   round((@valorMedio * T.LITROS_CONSUMIDOS),2),
-			   round((@valorRemanIni - T.LITROS_CONSUMIDOS),2),
-			    round((@valorRemanIni * @valorMedio) - (@valorMedio * T.LITROS_CONSUMIDOS),2),
+         			1,
+			   	@valorRemanIni,
+			   	@valorMedio,
+			   	round((@valorRemanIni * @valorMedio),2),
+			   	@valorRemanIni,
+			   	round((@valorRemanIni * @valorMedio),2),
+			   	round(@valorMedio,4),
+			   	T.LITROS_CONSUMIDOS,
+			   	round((@valorMedio * T.LITROS_CONSUMIDOS),2),
+				round((@valorRemanIni - T.LITROS_CONSUMIDOS),2),
+			    	round((@valorRemanIni * @valorMedio) - (@valorMedio * T.LITROS_CONSUMIDOS),2),
 				T.DT_DECOLAGEM,
 				ISNULL(ao.Sigla,'') + ' - ' + ISNULL(ad.Sigla,''),
 				T.ID_TRECHO
-			   FROM TB_TRECHO T 
-			   LEFT JOIN TB_ABASTECIMENTO AB ON T.ID_TRECHO = AB.ID_TRECHO
-			   inner join TB_AEROPORTO ao on T.ID_AEROPORTO_ORIGEM = ao.ID_AEROPORTO
-				inner join TB_AEROPORTO ad on T.ID_AEROPORTO_DESTINO= ad.ID_AEROPORTO
-				inner join TB_CIDADE co on ao.ID_CIDADE = co.ID_CIDADE
-				inner join TB_CIDADE cd on ad.ID_CIDADE = cd.ID_CIDADE
+		   	FROM TB_TRECHO T 
+		   	LEFT JOIN TB_ABASTECIMENTO AB ON T.ID_TRECHO = AB.ID_TRECHO
+		   	inner join TB_AEROPORTO ao on T.ID_AEROPORTO_ORIGEM = ao.ID_AEROPORTO
+			inner join TB_AEROPORTO ad on T.ID_AEROPORTO_DESTINO= ad.ID_AEROPORTO
+			inner join TB_CIDADE co on ao.ID_CIDADE = co.ID_CIDADE
+			inner join TB_CIDADE cd on ad.ID_CIDADE = cd.ID_CIDADE
 				where t.ID_AERONAVE = @idAeronave
 				AND T.DT_POUSO is not null
 				AND T.DT_POUSO BETWEEN (@dataInicial) AND @finalDate 
 
 
 			declare @cur_DtAbastecimento	date;
-      declare @cur_MoedaAbastecimento int;
+     			declare @cur_MoedaAbastecimento int;
 			declare @cur_LitrosAbastecidos	numeric (10,2);
 			declare @cur_ValorAbastecido	numeric(10,2);
-			declare @cur_ValorLitros		numeric(10,2);
-			declare @cur_ConsumoTrecho		numeric(10,2);
-			declare @cur_DataTrecho			date;
-			declare @cur_OrigemDestino		varchar(20);
-			declare @cur_IdTrecho			int;
+			declare @cur_ValorLitros	numeric(10,2);
+			declare @cur_ConsumoTrecho	numeric(10,2);
+			declare @cur_DataTrecho		date;
+			declare @cur_OrigemDestino	varchar(20);
+			declare @cur_IdTrecho		int;
 		    
-		    declare cursor_remanescente cursor for
+		    	declare cursor_remanescente cursor for
 
 			select
 			DISTINCT AB.DATA,
-      AB.ID_TIPO_MOEDA,
+      			AB.ID_TIPO_MOEDA,
 			CASE WHEN ((select COUNT(ID_TRECHO) from TB_ABASTECIMENTO WHERE ID_TRECHO = T.ID_TRECHO) > 0 ) THEN
 					SUM(ISNULL((AB.LITROS),0)) / (select COUNT(ID_TRECHO) from TB_ABASTECIMENTO WHERE ID_TRECHO = T.ID_TRECHO)
 				ELSE
@@ -126,14 +126,14 @@
 		open cursor_remanescente 
 								
 		fetch next from cursor_remanescente	into @cur_DtAbastecimento,			
-                                              @cur_MoedaAbastecimento,
-												                      @cur_LitrosAbastecidos,
-												                      @cur_ValorLitros,
-												                      @cur_ValorAbastecido,
-												                      @cur_ConsumoTrecho,
-												                      @cur_DataTrecho,	
-												                      @cur_OrigemDestino,
-												                      @cur_IdTrecho
+                                              		      @cur_MoedaAbastecimento,
+							      @cur_LitrosAbastecidos,
+							      @cur_ValorLitros,
+							      @cur_ValorAbastecido,
+							      @cur_ConsumoTrecho,
+							      @cur_DataTrecho,	
+							      @cur_OrigemDestino,
+							      @cur_IdTrecho
 		
 		
 		--Variáveis iniciais
@@ -144,14 +144,13 @@
 		set @id_trecho	= ISNULL((SELECT TOP 1 ID_TRECHO FROM TB_TRECHO WHERE ID_TRECHO > (SELECT TOP 1 IdTrecho FROM #principal) AND DT_POUSO >= @dtTrecho AND ID_AERONAVE = @idAeronave order by DT_POUSO, HORA_DECOLAGEM),0)
 		set @validaAB = 1;
 
-		create table #trechos (Id int identity,
-							  IdTbTrecho int)
+		create table #trechos (Id int identity, IdTbTrecho int)
 
 		insert into #trechos(IdTbTrecho)
 		
 		select ID_TRECHO from tb_trecho 
 		WHERE 
-		DT_POUSO is not null
+			DT_POUSO is not null
 		order by DT_POUSO, HORA_DECOLAGEM				
 
 		while @@FETCH_STATUS = 0
@@ -213,15 +212,15 @@
 				  							
 				  end	
 
-				fetch next from cursor_remanescente	into @cur_DtAbastecimento,
-                                                  @cur_MoedaAbastecimento,
-														                      @cur_LitrosAbastecidos,
-														                      @cur_ValorLitros,
-														                      @cur_ValorAbastecido,
-														                      @cur_ConsumoTrecho,
-														                      @cur_DataTrecho,	
-														                      @cur_OrigemDestino,
-														                      @cur_IdTrecho
+				fetch next from cursor_remanescente into @cur_DtAbastecimento,
+                                                  			 @cur_MoedaAbastecimento,
+								      	 @cur_LitrosAbastecidos,
+								      	 @cur_ValorLitros,
+								      	 @cur_ValorAbastecido,
+								      	 @cur_ConsumoTrecho,
+								      	 @cur_DataTrecho,	
+								      	 @cur_OrigemDestino,
+								      	 @cur_IdTrecho
 		end
 
 		close cursor_remanescente
