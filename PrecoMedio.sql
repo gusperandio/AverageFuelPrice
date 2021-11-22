@@ -1,8 +1,9 @@
-		declare @valorRemanIni numeric(10,2);
+
+    declare @valorRemanIni numeric(10,2);
 		declare @valorMedio numeric (10,4);
 		declare @vlrRemanFinal numeric (10,2);
 		declare @dataInicial date;
-		declare @finalDate date = '2022-07-29';
+		declare @finalDate date = '2100-01-01';
 		declare @idAeronave int = 1;
 		declare @id_trecho int;
 		declare @validaAB bit;
@@ -16,45 +17,41 @@
 		
 		--Tabela princial
 		create table #principal	(IdReman int identity,
-							IdAbastecimento int,
-							DtAbastecimento date,
-							LocalAbastecimento varchar(max),
-							LitrosAbastecidos numeric (10,2),
-							ValorLitros numeric(10,4),
-							ValorAbastecido numeric(10,2),
-							RemanInicial numeric(10,2),
-							ValorRemanInicial numeric(10,2),
-							PrecoMedio numeric(10,4),
-							ConsumoTrecho numeric(10,2),
-							ConsumoValor numeric(10,2),
-							RemanFinal numeric(10,2),
-							ValorRemanFinal numeric(10,2),
-							DataTrecho date,
-							OrigemDestino varchar(20),
-							IdTrecho int)
-
-		insert into #principal(IdAbastecimento,
-					DtAbastecimento,
-					LocalAbastecimento,
-					LitrosAbastecidos,
-					ValorLitros,
-					ValorAbastecido,
-					RemanInicial,
-					ValorRemanInicial,
-					PrecoMedio,
-					ConsumoTrecho,
-					ConsumoValor ,
-					RemanFinal,
-					ValorRemanFinal,
-					DataTrecho,
-					OrigemDestino,
-					IdTrecho)
-
-
+								DtAbastecimento date,
+                MoedaAbastecimento int,
+								LitrosAbastecidos numeric (10,2),
+								ValorLitros numeric(10,4),
+								ValorAbastecido numeric(10,2),
+								RemanInicial numeric(10,2),
+								ValorRemanInicial numeric(10,2),
+								PrecoMedio numeric(10,4),
+								ConsumoTrecho numeric(10,2),
+								ConsumoValor numeric(10,2),
+								RemanFinal numeric(10,2),
+								ValorRemanFinal numeric(10,2),
+								DataTrecho date,
+								OrigemDestino varchar(20),
+								IdTrecho int)
+		
+		insert into #principal(DtAbastecimento,
+                MoedaAbastecimento,
+								LitrosAbastecidos,
+								ValorLitros,
+								ValorAbastecido,
+								RemanInicial,
+								ValorRemanInicial,
+								PrecoMedio,
+								ConsumoTrecho,
+								ConsumoValor ,
+								RemanFinal,
+								ValorRemanFinal,
+								DataTrecho,
+								OrigemDestino,
+								IdTrecho)
+									
 			SELECT top 1 
-				0,
 				@dataInicial, 
-				'',
+         1,
 			   @valorRemanIni,
 			   @valorMedio,
 			   round((@valorRemanIni * @valorMedio),2),
@@ -79,44 +76,36 @@
 				AND T.DT_POUSO BETWEEN (@dataInicial) AND @finalDate 
 
 
-			declare @cur_IdAbastecimento	int;
 			declare @cur_DtAbastecimento	date;
-			declare @cur_LocalAbastecimento varchar(max);
+      declare @cur_MoedaAbastecimento int;
 			declare @cur_LitrosAbastecidos	numeric (10,2);
 			declare @cur_ValorAbastecido	numeric(10,2);
-			declare @cur_ValorLitros	numeric(10,2);
-			declare @cur_ConsumoTrecho	numeric(10,2);
-			declare @cur_DataTrecho		date;
-			declare @cur_OrigemDestino	varchar(20);
-			declare @cur_IdTrecho		int;
+			declare @cur_ValorLitros		numeric(10,2);
+			declare @cur_ConsumoTrecho		numeric(10,2);
+			declare @cur_DataTrecho			date;
+			declare @cur_OrigemDestino		varchar(20);
+			declare @cur_IdTrecho			int;
 		    
 		    declare cursor_remanescente cursor for
 
 			select
-			 AB.ID_ABASTECIMENTO,
-			 AB.DATA,
-			 (CASE	WHEN (AB.DATA = T.DT_DECOLAGEM) THEN
-					(case 
-						when CONVERT(time, AB.HORA) > CONVERT(time, T.HORA_POUSO) 
-							then ISNULL(ad.Sigla,'') + ' - ' + cd.NOME
-						when CONVERT(time, AB.HORA) > CONVERT(time, T.HORA_POUSO) 
-							then ISNULL(ao.Sigla,'') + ' - ' +  co.NOME
-						when CONVERT(time, AB.HORA) = CONVERT(time, T.HORA_POUSO) 
-							then ISNULL(ad.Sigla,'') + ' - ' +  cd.NOME 
-						else 
-							ISNULL(ad.Sigla,'') + ' - ' +  cd.NOME
-					end)
-					WHEN (AB.DATA < T.DT_DECOLAGEM) THEN
-					ISNULL(ao.Sigla,'') + ' - ' +  co.NOME
-					WHEN (AB.DATA is null) THEN 
-					'-'
+			DISTINCT AB.DATA,
+      AB.ID_TIPO_MOEDA,
+			CASE WHEN ((select COUNT(ID_TRECHO) from TB_ABASTECIMENTO WHERE ID_TRECHO = T.ID_TRECHO) > 0 ) THEN
+					SUM(ISNULL((AB.LITROS),0)) / (select COUNT(ID_TRECHO) from TB_ABASTECIMENTO WHERE ID_TRECHO = T.ID_TRECHO)
 				ELSE
-				   ISNULL(ad.Sigla,'') + ' - ' +  cd.NOME
-				 END
-			 )as LocalAbastecimento,
-			 ISNULL((AB.LITROS),0),
-			 ISNULL((AB.VALOR_LITRO),0),
-			 ISNULL((AB.VALOR),0), 
+					SUM(ISNULL((AB.LITROS),0))
+				END,
+				CASE WHEN ((select COUNT(ID_TRECHO) from TB_ABASTECIMENTO WHERE ID_TRECHO = T.ID_TRECHO) > 0 ) THEN
+					SUM(ISNULL((AB.VALOR_LITRO),0)) / (select COUNT(ID_TRECHO) from TB_ABASTECIMENTO WHERE ID_TRECHO = T.ID_TRECHO)
+				ELSE
+					SUM(ISNULL((AB.VALOR_LITRO),0))
+				END,
+				CASE WHEN ((select COUNT(ID_TRECHO) from TB_ABASTECIMENTO WHERE ID_TRECHO = T.ID_TRECHO) > 0 ) THEN
+					SUM(ISNULL((AB.VALOR),0)) / (select COUNT(ID_TRECHO) from TB_ABASTECIMENTO WHERE ID_TRECHO = T.ID_TRECHO)
+				ELSE
+					SUM(ISNULL((AB.VALOR),0))
+				END, 
 			 T.QUANTIDADE_CONSUMIDA,
 			 T.DT_POUSO,
 			 ISNULL(ao.Sigla,'') + ' - ' + ISNULL(ad.Sigla,'') as OrigemDestino,
@@ -131,20 +120,20 @@
 			AND T.ID_TRECHO not in (select top 1 IdTrecho from #principal)
 			AND T.DT_POUSO is not null
 			AND T.DT_POUSO BETWEEN (@dataInicial) AND @finalDate
+			GROUP BY T.ID_TRECHO, DT_POUSO, AB.DATA, AO.SIGLA, AD.SIGLA, T.QUANTIDADE_CONSUMIDA, AB.ID_TIPO_MOEDA
 			order by DT_POUSO
 
 		open cursor_remanescente 
 								
-		fetch next from cursor_remanescente into @cur_IdAbastecimento,
-							 @cur_DtAbastecimento,					
-							 @cur_LocalAbastecimento, 
-							 @cur_LitrosAbastecidos,
-							 @cur_ValorLitros,
-							 @cur_ValorAbastecido,
-							 @cur_ConsumoTrecho,
-							 @cur_DataTrecho,	
-							 @cur_OrigemDestino,
-							 @cur_IdTrecho
+		fetch next from cursor_remanescente	into @cur_DtAbastecimento,			
+                                              @cur_MoedaAbastecimento,
+												                      @cur_LitrosAbastecidos,
+												                      @cur_ValorLitros,
+												                      @cur_ValorAbastecido,
+												                      @cur_ConsumoTrecho,
+												                      @cur_DataTrecho,	
+												                      @cur_OrigemDestino,
+												                      @cur_IdTrecho
 		
 		
 		--Variáveis iniciais
@@ -156,7 +145,7 @@
 		set @validaAB = 1;
 
 		create table #trechos (Id int identity,
-					  IdTbTrecho int)
+							  IdTbTrecho int)
 
 		insert into #trechos(IdTbTrecho)
 		
@@ -169,79 +158,77 @@
 			begin 
 				if(@validaAB = 1)
 					begin
-						set @id_trecho = (select top 1 IdTbTrecho from #trechos where id > (SELECT top 1 id FROM #trechos where IdTbTrecho = @cur_IdTrecho))
-																	
-						insert into #principal (IdAbastecimento, DtAbastecimento, LocalAbastecimento, LitrosAbastecidos, ValorLitros, ValorAbastecido, RemanInicial, ValorRemanInicial, PrecoMedio, ConsumoTrecho, ConsumoValor, RemanFinal, ValorRemanFinal, DataTrecho, OrigemDestino, IdTrecho)
-							select
-									@cur_IdAbastecimento, --IdAbastecimento
-								        @cur_DtAbastecimento, --Data Abastecimento	
-									@cur_LocalAbastecimento, --Local Abastecimento
-									@cur_LitrosAbastecidos, -- Litros Abastecidos
-									@cur_ValorLitros, -- Valor do Litro
-									@cur_ValorAbastecido, --Valor Abastecido
-									@remanFinal + @cur_LitrosAbastecidos, --Remanescente Inicial 
-									(@remanFinal * @precoMedio) + (@cur_LitrosAbastecidos * @cur_ValorLitros), --Valor Remanescente Inicial
-									Round(((@remanFinal * @precoMedio) + (@cur_LitrosAbastecidos * @cur_ValorLitros)) / (@remanFinal + @cur_LitrosAbastecidos),4), --Preço Medio
-									@cur_ConsumoTrecho, -- Consumido no Trecho
-									Round(((@remanFinal * @precoMedio) + (@cur_LitrosAbastecidos * @cur_ValorLitros)) / (@remanFinal + @cur_LitrosAbastecidos),4) * @cur_ConsumoTrecho, -- Consumido Valor
-									(@remanFinal + @cur_LitrosAbastecidos) - @cur_ConsumoTrecho, --Remanescente Final
-									((@remanFinal * @precoMedio) + (@cur_LitrosAbastecidos * @cur_ValorLitros)) - Round(((@remanFinal * @precoMedio) + (@cur_LitrosAbastecidos * @cur_ValorLitros)) / (@remanFinal + @cur_LitrosAbastecidos),4) * @cur_ConsumoTrecho, --Valor Remanescente final
-									@cur_DataTrecho, -- Data Pouso
-									@cur_OrigemDestino, -- Origem Destino
-									@cur_IdTrecho -- ID do Trecho
+						
+						  set @id_trecho = (select top 1 IdTbTrecho from #trechos where id > (SELECT top 1 id FROM #trechos where IdTbTrecho = @cur_IdTrecho))
+										
+						  insert into #principal (DtAbastecimento, @cur_MoedaAbastecimento, LitrosAbastecidos, ValorLitros, ValorAbastecido, RemanInicial, ValorRemanInicial, PrecoMedio, ConsumoTrecho, ConsumoValor, RemanFinal, ValorRemanFinal, DataTrecho, OrigemDestino, IdTrecho)
+							  select
+								    @cur_DtAbastecimento, --Data Abastecimento	
+                    @cur_MoedaAbastecimento, --Moeda
+									  @cur_LitrosAbastecidos, -- Litros Abastecidos
+									  @cur_ValorLitros, -- Valor do Litro
+									  @cur_ValorAbastecido, --Valor Abastecido
+									  @remanFinal + @cur_LitrosAbastecidos, --Remanescente Inicial 
+									  (@remanFinal * @precoMedio) + (@cur_LitrosAbastecidos * @cur_ValorLitros), --Valor Remanescente Inicial
+									  Round(((@remanFinal * @precoMedio) + (@cur_LitrosAbastecidos * @cur_ValorLitros)) / (@remanFinal + @cur_LitrosAbastecidos),4), --Preço Medio
+									  @cur_ConsumoTrecho, -- Consumido no Trecho
+									  Round(((@remanFinal * @precoMedio) + (@cur_LitrosAbastecidos * @cur_ValorLitros)) / (@remanFinal + @cur_LitrosAbastecidos),4) * @cur_ConsumoTrecho, -- Consumido Valor
+									  (@remanFinal + @cur_LitrosAbastecidos) - @cur_ConsumoTrecho, --Remanescente Final
+									  ((@remanFinal * @precoMedio) + (@cur_LitrosAbastecidos * @cur_ValorLitros)) - Round(((@remanFinal * @precoMedio) + (@cur_LitrosAbastecidos * @cur_ValorLitros)) / (@remanFinal + @cur_LitrosAbastecidos),4) * @cur_ConsumoTrecho, --Valor Remanescente final
+									  @cur_DataTrecho, -- Data Pouso
+									  @cur_OrigemDestino, -- Origem Destino
+									  @cur_IdTrecho -- ID do Trecho
 									
-									set @vlrRemanFinal	= ((@remanFinal * @precoMedio) + (@cur_LitrosAbastecidos * @cur_ValorLitros)) - Round(((@remanFinal * @precoMedio) + (@cur_LitrosAbastecidos * @cur_ValorLitros)) / (@remanFinal + @cur_LitrosAbastecidos),4) * @cur_ConsumoTrecho
-									set @precoMedio		= Round(((@remanFinal * @precoMedio) + (@cur_LitrosAbastecidos * @cur_ValorLitros)) / (@remanFinal + @cur_LitrosAbastecidos),4)
-									set @remanFinal		= @remanFinal + @cur_LitrosAbastecidos - @cur_ConsumoTrecho
-									
-									set @validaAB = ISNULL((select CASE WHEN (ID_ABASTECIMENTO IS null) THEN 0 ELSE 1 END from TB_ABASTECIMENTO where ID_TRECHO = @id_trecho),0)			
-						end
-							else
-						begin	
-								set @id_trecho = (select top 1 IdTbTrecho from #trechos where id > (SELECT top 1 id FROM #trechos where IdTbTrecho = @cur_IdTrecho))
+									  set @vlrRemanFinal	= ((@remanFinal * @precoMedio) + (@cur_LitrosAbastecidos * @cur_ValorLitros)) - Round(((@remanFinal * @precoMedio) + (@cur_LitrosAbastecidos * @cur_ValorLitros)) / (@remanFinal + @cur_LitrosAbastecidos),4) * @cur_ConsumoTrecho
+									  set @precoMedio		= Round(((@remanFinal * @precoMedio) + (@cur_LitrosAbastecidos * @cur_ValorLitros)) / (@remanFinal + @cur_LitrosAbastecidos),4)
+									  set @remanFinal		= @remanFinal + @cur_LitrosAbastecidos - @cur_ConsumoTrecho
+									  
+									  set @validaAB = ISNULL((select TOP 1 CASE WHEN (ID_ABASTECIMENTO IS null) THEN 0 ELSE 1 END from TB_ABASTECIMENTO where ID_TRECHO = @id_trecho),0)			
+				  end
+				  	else
+				  begin	
+          
+				  		set @id_trecho = (select top 1 IdTbTrecho from #trechos where id > (SELECT top 1 id FROM #trechos where IdTbTrecho = @cur_IdTrecho))
 
-								insert into #principal (IdAbastecimento, DtAbastecimento, LocalAbastecimento, LitrosAbastecidos, ValorLitros, ValorAbastecido, RemanInicial, ValorRemanInicial, PrecoMedio, ConsumoTrecho, ConsumoValor, RemanFinal, ValorRemanFinal, DataTrecho, OrigemDestino, IdTrecho)
-								select
-									@cur_IdAbastecimento, --IdAbastecimento
-									@cur_DtAbastecimento, --Data Abastecimento	
-									@cur_LocalAbastecimento, --Local Abastecimento
-									@cur_LitrosAbastecidos, -- Litros Abastecidos
-									@cur_ValorLitros, -- Valor do Litro
-									@cur_ValorAbastecido, --Valor Abastecido
-									@remanFinal, --Remanescente Inicial 
-									@vlrRemanFinal, --Valor Remanescente Inicial
-									@precoMedio, --Preço Medio
-									@cur_ConsumoTrecho, -- Consumido no Trecho
-									@precoMedio * @cur_ConsumoTrecho, -- Consumido Valor
-									@remanFinal - @cur_ConsumoTrecho, --Remanescente Final
-								        (@remanFinal - @cur_ConsumoTrecho) * @precoMedio, --Valor Remanescente final
-									@cur_DataTrecho, -- Data Pouso
-									@cur_OrigemDestino, -- Origem Destino
-									@cur_IdTrecho -- ID do Trecho
+				  		insert into #principal (DtAbastecimento, @cur_MoedaAbastecimento, LitrosAbastecidos, ValorLitros, ValorAbastecido, RemanInicial, ValorRemanInicial, PrecoMedio, ConsumoTrecho, ConsumoValor, RemanFinal, ValorRemanFinal, DataTrecho, OrigemDestino, IdTrecho)
+				  		  select
+				  				  @cur_DtAbastecimento, --Data Abastecimento	
+                    @cur_MoedaAbastecimento, --Moeda
+				  				  @cur_LitrosAbastecidos, -- Litros Abastecidos
+				  				  @cur_ValorLitros, -- Valor do Litro
+				  				  @cur_ValorAbastecido, --Valor Abastecido
+				  				  @remanFinal, --Remanescente Inicial 
+				  				  @vlrRemanFinal, --Valor Remanescente Inicial
+				  				  @precoMedio, --Preço Medio
+				  				  @cur_ConsumoTrecho, -- Consumido no Trecho
+				  				  @precoMedio * @cur_ConsumoTrecho, -- Consumido Valor
+				  				  @remanFinal - @cur_ConsumoTrecho, --Remanescente Final
+				  			     (@remanFinal - @cur_ConsumoTrecho) * @precoMedio, --Valor Remanescente final
+				  				  @cur_DataTrecho, -- Data Pouso
+				  				  @cur_OrigemDestino, -- Origem Destino
+				  				  @cur_IdTrecho -- ID do Trecho
 
-									set @remanFinal = @remanFinal - @cur_ConsumoTrecho
-									set @validaAB = ISNULL((select top 1 CASE WHEN (ID_ABASTECIMENTO IS null) THEN 0 ELSE 1 END from TB_ABASTECIMENTO where ID_TRECHO = @id_trecho),0)
-													
-						end	
+				  				  set @remanFinal = @remanFinal - @cur_ConsumoTrecho
+				  				  set @validaAB = ISNULL((select top 1 CASE WHEN (ID_ABASTECIMENTO IS null) THEN 0 ELSE 1 END from TB_ABASTECIMENTO where ID_TRECHO = @id_trecho),0)
+				  							
+				  end	
 
-
-				fetch next from cursor_remanescente into @cur_IdAbastecimento,
-									 @cur_DtAbastecimento,	
-									 @cur_LocalAbastecimento,
-									 @cur_LitrosAbastecidos,
-									 @cur_ValorLitros,
-									 @cur_ValorAbastecido,
-									 @cur_ConsumoTrecho,
-									 @cur_DataTrecho,	
-									 @cur_OrigemDestino,
-									 @cur_IdTrecho
-
+				fetch next from cursor_remanescente	into @cur_DtAbastecimento,
+                                                  @cur_MoedaAbastecimento,
+														                      @cur_LitrosAbastecidos,
+														                      @cur_ValorLitros,
+														                      @cur_ValorAbastecido,
+														                      @cur_ConsumoTrecho,
+														                      @cur_DataTrecho,	
+														                      @cur_OrigemDestino,
+														                      @cur_IdTrecho
 		end
 
 		close cursor_remanescente
 		deallocate cursor_remanescente
 
-		select * from #principal			
+		SELECT * FROM #principal			
 
 		drop table #trechos
 		drop table #principal
+ 
